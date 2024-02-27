@@ -2,11 +2,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.sql.Timestamp;
 
 public class Main {
     public static int PORT = 7392;
     public static int MAX_BYTES = 4096;
+    public static String IP = "192.168.84.110";
     public String command = "IDLE";
 
     private boolean doSay = false;
@@ -18,6 +20,8 @@ public class Main {
 
     private void Server() throws IOException {
         DatagramSocket serverSocket = new DatagramSocket(Main.PORT);
+        serverSocket.setReuseAddress(true);
+        serverSocket.bind(new InetSocketAddress(InetAddress.getByName(Main.IP), Main.PORT));
         System.out.println("Server Started. Listening for Clients on port " + Main.PORT + "...");
         byte[] receiveData = new byte[Main.MAX_BYTES];
         DatagramPacket receivePacket;
