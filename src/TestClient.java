@@ -16,7 +16,7 @@ public class TestClient {
                 System.exit(1);
             }
             sendData = cmd.getBytes();
-            sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("127.0.0.1"), Main.PORT);
+            sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.249.110"), Main.PORT);
             clientSocket.send(sendPacket);
         }
     }

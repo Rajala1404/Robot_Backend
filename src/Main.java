@@ -2,10 +2,11 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.sql.Timestamp;
 
 public class Main {
-    public static int PORT = 7392;
+    public static int PORT = 6000;
     public static int MAX_BYTES = 4096;
     public String command = "IDLE";
 
@@ -17,16 +18,25 @@ public class Main {
     }
 
     private void Server() throws IOException {
-        DatagramSocket serverSocket = new DatagramSocket(Main.PORT, InetAddress.getByName("192.168.84.110"));
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(Main.PORT);
+        } catch (SocketException e) {
+            e.printStackTrace();
+            return;
+        }
         System.out.println("Server Started. Listening for Clients on port " + Main.PORT + "...");
-        byte[] receiveData = new byte[Main.MAX_BYTES];
-        DatagramPacket receivePacket;
+        byte[] buffer = new byte[Main.MAX_BYTES];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         while (true) {
-            receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            serverSocket.receive(receivePacket);
-            InetAddress IPAddress = receivePacket.getAddress();
-            int port = receivePacket.getPort();
-            String clientMessage = new String(receivePacket.getData(),0,receivePacket.getLength());
+            try {
+                socket.receive(packet);
+            } catch (IOException e) {
+                break;
+            }
+            InetAddress IPAddress = packet.getAddress();
+            int port = packet.getPort();
+            String clientMessage = new String(packet.getData(),0,packet.getLength());
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             command = clientMessage;
             System.out.println("[" + timestamp.toString() + "]" + " [IP: " + IPAddress + " | Port: " + port +"] " + clientMessage);
