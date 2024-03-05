@@ -17,7 +17,7 @@ public class Main {
     }
 
     private void Server() throws IOException {
-        DatagramSocket serverSocket = new DatagramSocket(Main.PORT);
+        DatagramSocket serverSocket = new DatagramSocket(Main.PORT, InetAddress.getByName("192.168.84.110"));
         System.out.println("Server Started. Listening for Clients on port " + Main.PORT + "...");
         byte[] receiveData = new byte[Main.MAX_BYTES];
         DatagramPacket receivePacket;
