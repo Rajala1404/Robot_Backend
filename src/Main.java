@@ -1,18 +1,25 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
+import java.sql.Array;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class Main {
     public static int PORT = 6000;
     public static int MAX_BYTES = 4096;
     public String command = "IDLE";
+    public InetAddress lastCIP = InetAddress.getByName("0.0.0.0");
+    public Integer lastCPort = 0;
+    public InetAddress[] trustedDevices = {};
 
     private boolean doSay = false;
 
-    public static void main(String[] args) throws IOException {
+    public Main() throws Exception {
+    }
+
+    public static void main(String[] args) throws Exception {
         Main help = new Main();
         help.Server();
     }
@@ -34,12 +41,12 @@ public class Main {
             } catch (IOException e) {
                 break;
             }
-            InetAddress IPAddress = packet.getAddress();
-            int port = packet.getPort();
+            lastCIP = packet.getAddress();
+            lastCPort = packet.getPort();
             String clientMessage = new String(packet.getData(),0,packet.getLength());
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             command = clientMessage;
-            System.out.println("[" + timestamp.toString() + "]" + " [IP: " + IPAddress + " | Port: " + port +"] " + clientMessage);
+            System.out.println("[" + timestamp.toString() + "]" + " [IP: " + lastCPort + " | Port: " + lastCPort +"] " + clientMessage);
             Controller();
         }
     }
@@ -53,6 +60,8 @@ public class Main {
         }
 
         switch (command) {
+            case "CONNECTED" -> connectionTest();
+            case "TRUST" -> connectionTrust();
             case "IDLE" -> idle(timestamp);
             case "FORWARD" -> forward(timestamp);
             case "LEFT" -> left(timestamp);
@@ -61,6 +70,32 @@ public class Main {
             case "SAY" -> say(timestamp);
             default -> System.out.println("[" + timestamp.toString() + "] " + "NOT VALID!");
         }
+    }
+
+    private void connectionTrust() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                InetAddress ip = lastCIP;
+                int length = trustedDevices.length+1;
+                for (int i = 0; i < length; i++) {
+                    if (trustedDevices[i].equals(ip)) {
+
+                    }
+                }
+                Scanner input = new Scanner(System.in);
+                System.out.println("Do you want to trust this IP? (Y/N): '" + ip + "'");
+                String cmd = input.nextLine();
+                if (Objects.equals(cmd, "Y") || Objects.equals(cmd, "y")) {
+                    trustedDevices[length] = ip;
+                }
+            }
+        });
+        if (!(thread.isAlive())) thread.start();
+    }
+
+    private void connectionTest() {
+
     }
 
     private void idle(Timestamp timestamp) {
