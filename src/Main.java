@@ -2,9 +2,7 @@ import java.io.IOException;
 import java.net.*;
 import java.sql.Array;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static int PORT = 6000;
@@ -12,7 +10,7 @@ public class Main {
     public String command = "IDLE";
     public InetAddress lastCIP = InetAddress.getByName("0.0.0.0");
     public Integer lastCPort = 0;
-    public InetAddress[] trustedDevices = {};
+    public List<InetAddress> trustedDevices = new ArrayList<>();
 
     private boolean doSay = false;
 
@@ -76,18 +74,47 @@ public class Main {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                boolean trust = false;
                 InetAddress ip = lastCIP;
-                int length = trustedDevices.length+1;
-                for (int i = 0; i < length; i++) {
-                    if (trustedDevices[i].equals(ip)) {
-
+                if (trustedDevices.contains(ip)) trust = true;
+                if (!trust) {
+                    Scanner input = new Scanner(System.in);
+                    while (true) {
+                        System.out.println("Do you want to trust this IP? (Y/N): '" + ip + "'");
+                        String cmd = input.nextLine();
+                        if (Objects.equals(cmd, "Y") || Objects.equals(cmd, "y")) {
+                            trustedDevices.add(ip);
+                            trust = true;
+                            break;
+                        } else if (Objects.equals(cmd, "N") || Objects.equals(cmd, "n")) {
+                            break;
+                        } else {
+                            System.out.println("Wrong Input! Try Again");
+                        }
                     }
                 }
-                Scanner input = new Scanner(System.in);
-                System.out.println("Do you want to trust this IP? (Y/N): '" + ip + "'");
-                String cmd = input.nextLine();
-                if (Objects.equals(cmd, "Y") || Objects.equals(cmd, "y")) {
-                    trustedDevices[length] = ip;
+                DatagramPacket sendPacket;
+                DatagramSocket clientSocket;
+                byte[] sendData = new byte[0];
+                try {
+                    clientSocket = new DatagramSocket();
+                    clientSocket.setSoTimeout(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return;
+                }
+                try  {
+                    String string;
+                    if (trust) {
+                        string = "true";
+                    } else {
+                        string = "false";
+                    }
+                    sendData = string.getBytes();
+                    sendPacket = new DatagramPacket(sendData, sendData.length, ip, 6000);
+                    clientSocket.send(sendPacket);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
