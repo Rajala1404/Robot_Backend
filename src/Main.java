@@ -41,15 +41,15 @@ public class Main {
             }
             lastCIP = packet.getAddress();
             lastCPort = packet.getPort();
-            String clientMessage = new String(packet.getData(),0,packet.getLength());
+            String clientMessage = new String(packet.getData(), 0, packet.getLength());
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             command = clientMessage;
-            System.out.println("[" + timestamp.toString() + "]" + " [IP: " + lastCPort + " | Port: " + lastCPort +"] " + clientMessage);
+            System.out.println("[" + timestamp.toString() + "]" + " [IP: " + lastCIP + " | Port: " + lastCPort + "] " + clientMessage);
             Controller();
         }
     }
 
-    private void Controller(){
+    private void Controller() {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
         if (doSay) {
