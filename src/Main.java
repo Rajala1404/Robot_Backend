@@ -213,13 +213,12 @@ public class Main {
     private void backwards() {
         Logger.info("I'm now going Backwards.");
     }
-
     private void say() {
         if (doSay) {
-            System.out.println(command);
+            Logger.info("Saying: " + command);
             doSay = false;
         } else {
-            System.out.println("What do you have to say?");
+            Logger.info("Waiting for argument");
             doSay = true;
         }
     }
