@@ -1,9 +1,6 @@
 package utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -21,7 +18,7 @@ public class Logger {
         String formattedTimestamp = sdf.format(timestamp);
         String callClass = Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName();
         String out = "[" + formattedTimestamp + "] " + "[" + callClass + "] " + "[DEBUG] " + s;
-        System.out.println(GREEN + out + RESET);
+        System.out.println(WHITE + out + RESET);
         new Logger().writeLog(out);
     }
     public static void info(String s) {
@@ -39,7 +36,7 @@ public class Logger {
         String formattedTimestamp = sdf.format(timestamp);
         String callClass = Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName();
         String out = "[" + formattedTimestamp + "] " + "[" + callClass + "] " + "[WARN] " + s;
-        System.out.println(GREEN + out + RESET);
+        System.out.println(YELLOW + out + RESET);
         new Logger().writeLog(out);
     }
     public static void error(String s) {
@@ -48,7 +45,7 @@ public class Logger {
         String formattedTimestamp = sdf.format(timestamp);
         String callClass = Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName();
         String out = "[" + formattedTimestamp + "] " + "[" + callClass + "] " + "[ERROR] " + s;
-        System.out.println(GREEN + out + RESET);
+        System.out.println(RED + out + RESET);
         new Logger().writeLog(out);
     }
     public static void fatal(String s) {
@@ -57,7 +54,7 @@ public class Logger {
         String formattedTimestamp = sdf.format(timestamp);
         String callClass = Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName();
         String out = "[" + formattedTimestamp + "] " + "[" + callClass + "] " + "[FATAL] " + s;
-        System.out.println(GREEN + out + RESET);
+        System.out.println(RED_BACKGROUND + out + RESET);
         new Logger().writeLog(out);
     }
 
@@ -102,9 +99,10 @@ public class Logger {
         }
         logFile = new File(fileName);
         try {
-            printWriter = new PrintWriter(logFile);
-            printWriter.append(s);
-            printWriter.close();
+            BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, true));
+            bw.write(s);
+            bw.newLine();
+            bw.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.*;
 import java.sql.Timestamp;
 import java.util.*;
@@ -21,6 +22,9 @@ public class Main {
     public InetAddress lastClientIP = InetAddress.getByName("0.0.0.0");
     public Integer lastClientPort = 0;
     public List<InetAddress> trustedDevices = new ArrayList<>();
+    private File logFile;
+    private Boolean doSay = false;
+    private Boolean waitForRebootTime = false;
 
     public File getLogFile() {
         return logFile;
@@ -30,9 +34,6 @@ public class Main {
         this.logFile = logFile;
     }
 
-    private File logFile;
-
-    private boolean doSay = false;
 
     public Main() throws Exception {
 
@@ -68,9 +69,17 @@ public class Main {
             Logger.info("[IP: " + lastClientIP + " | Port: " + lastClientPort +"] " + clientMessage);
             Controller(lastClientIP);
         }
+        if (socket.isBound()) socket.close();
     }
 
     private void Controller(InetAddress ip){
+        if (waitForRebootTime) {
+            try {
+                rebootBySeconds(Integer.parseInt(command));
+            } catch (Exception e) {
+                return;
+            }
+        }
 
         if (doSay) {
             say();
@@ -87,6 +96,11 @@ public class Main {
             case "RIGHT" -> right();
             case "BACKWARDS" -> backwards();
             case "SAY" -> say();
+            case "REBOOT_NOW" -> rebootNow();
+            case "REBOOT_S" -> {
+                waitForRebootTime = true;
+                Logger.info("Waiting for Countdown to start reboot");
+            }
             default -> Logger.warning("Command: " + command + " IS NOT VALID!");
         }
     }
@@ -131,7 +145,7 @@ public class Main {
                         string = "false";
                     }
                     sendData = string.getBytes();
-                    Logger.debug("Sending Ack to: " + ip + " at: " + PORT_SEND_TRUST);
+                    Logger.debug("Sending Ack to: " + ip + ":" + PORT_SEND_TRUST);
                     sendPacket = new DatagramPacket(sendData, sendData.length, ip, PORT_SEND_TRUST);
                     Logger.debug("Sent Ack!");
                     clientSocket.send(sendPacket);
@@ -207,6 +221,40 @@ public class Main {
         } else {
             System.out.println("What do you have to say?");
             doSay = true;
+        }
+    }
+
+    private void rebootNow() {
+        try  {
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec("reboot now");
+            int exitCode = p.waitFor();
+
+            if (exitCode == 0) {
+                Logger.info("Now Rebooting");
+            } else {
+                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.error("Failed to Reboot!");
+        }
+    }
+
+    private void rebootBySeconds(int seconds) {
+        try  {
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec("reboot " + seconds);
+            int exitCode = p.waitFor();
+
+            if (exitCode == 0) {
+                Logger.info("Now Rebooting...");
+            } else {
+                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.error("Failed to Reboot!");
         }
     }
 }
