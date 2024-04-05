@@ -71,7 +71,7 @@ public class Main {
         }
         if (socket.isBound()) socket.close();
     }
-
+  
     private void Controller(InetAddress ip){
         if (waitForRebootTime) {
             try {
