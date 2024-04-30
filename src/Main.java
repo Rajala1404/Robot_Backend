@@ -39,10 +39,28 @@ public class Main {
 
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+    }
+
+    private static void boot() throws Exception {
+        Main main = new Main();
         new Logger().createLogFile();
-        Main help = new Main();
-        help.server();
+        Logger.info("Trying to start server...");
+        for (int i = 0; i < 9; i++) {
+            try {
+                main.server();
+            } catch (Exception e) {
+                if (i < 8) {
+                    Logger.fatal("Failed to start server! Trying again...");
+                    Logger.error("Stacktrace: " + e.getMessage());
+                } else {
+                    Logger.fatal("Failed to start server! RESET!");
+                    Logger.error("Stacktrace: " + e.getMessage());
+                    // TODO: Add Reset Function
+
+                }
+            }
+        }
     }
 
     private void server() throws IOException {
