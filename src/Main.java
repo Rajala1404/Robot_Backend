@@ -54,10 +54,9 @@ public class Main {
                     Logger.fatal("Failed to start server! Trying again...");
                     Logger.error("Stacktrace: " + e.getMessage());
                 } else {
-                    Logger.fatal("Failed to start server! RESET!");
+                    Logger.fatal("Failed to start server! RESET & REBOOT!");
                     Logger.error("Stacktrace: " + e.getMessage());
                     // TODO: Add Reset Function
-
                 }
             }
         }
