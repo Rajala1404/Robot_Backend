@@ -49,6 +49,7 @@ public class Main {
         for (int i = 0; i < 9; i++) {
             try {
                 main.server();
+                break;
             } catch (Exception e) {
                 if (i < 8) {
                     Logger.fatal("Failed to start server! Trying again...");
