@@ -1,11 +1,14 @@
+package main;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.*;
-import java.sql.Timestamp;
 import java.util.*;
 
+import com.pi4j.Pi4J;
+import com.pi4j.io.serial.*;
 import utils.Logger;
+import utils.SerialHandler;
 
 public class Main {
     /**
@@ -26,6 +29,8 @@ public class Main {
     private Boolean doSay = false;
     private Boolean waitForRebootTime = false;
 
+    public Serial serial;
+
     public File getLogFile() {
         return logFile;
     }
@@ -39,16 +44,44 @@ public class Main {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        boot();
     }
 
     private static void boot() throws Exception {
         Main main = new Main();
+        var serial = main.serial;
+        SerialHandler serialHandler = new SerialHandler();
         new Logger().createLogFile();
+        var pi4j = Pi4J.newAutoContext();
+        Logger.info("Trying to create Serial...");
+        serial = pi4j.create(Serial.newConfigBuilder(pi4j)
+                .use_115200_N81()
+                .dataBits_8()
+                .parity(Parity.NONE)
+                .stopBits(StopBits._1)
+                .flowControl(FlowControl.NONE)
+                .id("my-serial")
+                .device("UART1")
+                .provider("pigpio-serial")
+                .build());
+        serial.open();
+        Logger.info("Serial created");
+        Logger.info("Waiting for opening of Serial");
+        while (!serial.isOpen()) {
+            Thread.sleep(250);
+        }
+        Logger.info("Serial opened.");
+        Logger.info("Starting Serial reader...");
+        serialHandler.receive(serial);
+        Logger.info("Successfully started Serial reader.");
+        Logger.info("Trying Handshake with Controller...");
+        serialHandler.send("S");
         Logger.info("Trying to start server...");
         for (int i = 0; i < 9; i++) {
             try {
                 main.server();
+                Logger.info("Server started successfully!");
                 break;
             } catch (Exception e) {
                 if (i < 8) {
@@ -63,31 +96,38 @@ public class Main {
         }
     }
 
-    private void server() throws IOException {
-        DatagramSocket socket = null;
-        try {
-            socket = new DatagramSocket(Main.PORT);
-        } catch (SocketException e) {
-            e.printStackTrace();
-            return;
-        }
-        Logger.info("Server started. Listening for Clients on port " + Main.PORT + "...");
-        byte[] buffer = new byte[Main.MAX_BYTES];
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        while (true) {
-            try {
-                socket.receive(packet);
-            } catch (IOException e) {
-                break;
+
+    private void server() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DatagramSocket socket = null;
+                try {
+                    socket = new DatagramSocket(Main.PORT);
+                } catch (SocketException e) {
+                    Logger.error("Failed to start server!\nStacktrace: " + e.getMessage());
+                    return;
+                }
+                Logger.info("Server started. Listening for Clients on port " + Main.PORT + "...");
+                byte[] buffer = new byte[Main.MAX_BYTES];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                while (true) {
+                    try {
+                        socket.receive(packet);
+                    } catch (IOException e) {
+                        break;
+                    }
+                    lastClientIP = packet.getAddress();
+                    lastClientPort = packet.getPort();
+                    String clientMessage = new String(packet.getData(),0,packet.getLength());
+                    command = clientMessage;
+                    Logger.info("[IP: " + lastClientIP + " | Port: " + lastClientPort +"] " + clientMessage);
+                    Controller(lastClientIP);
+                }
+                if (socket.isBound()) socket.close();
             }
-            lastClientIP = packet.getAddress();
-            lastClientPort = packet.getPort();
-            String clientMessage = new String(packet.getData(),0,packet.getLength());
-            command = clientMessage;
-            Logger.info("[IP: " + lastClientIP + " | Port: " + lastClientPort +"] " + clientMessage);
-            Controller(lastClientIP);
-        }
-        if (socket.isBound()) socket.close();
+        });
+        if(!thread.isAlive()) thread.start();
     }
   
     private void Controller(InetAddress ip){
