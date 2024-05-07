@@ -13,5 +13,6 @@
     <orderEntry type="library" name="pi4j.core" level="project" />
     <orderEntry type="library" name="pi4j.plugin.raspberrypi" level="project" />
     <orderEntry type="library" name="pi4j.plugin.pigpio" level="project" />
+    <orderEntry type="library" name="pi4j.library.pigpio" level="project" />
   </component>
 </module>

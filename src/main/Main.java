@@ -64,6 +64,7 @@ public class Main {
                 .id("my-serial")
                 .device("UART1")
                 .provider("pigpio-serial")
+                .device("/dev/ttyS0")
                 .build());
         serial.open();
         Logger.info("Serial created");
@@ -76,7 +77,7 @@ public class Main {
         serialHandler.receive(serial);
         Logger.info("Successfully started Serial reader.");
         Logger.info("Trying Handshake with Controller...");
-        serialHandler.send("S");
+        serial.write("S");
         Logger.info("Trying to start server...");
         for (int i = 0; i < 9; i++) {
             try {
@@ -306,6 +307,7 @@ public class Main {
 
             if (exitCode == 0) {
                 Logger.info("Now Rebooting...");
+                serial.write("R");
             } else {
                 Logger.error("Failed to Reboot! Exit Code: " + exitCode);
             }
