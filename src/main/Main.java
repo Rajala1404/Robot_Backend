@@ -26,8 +26,10 @@ public class Main {
     public Integer lastClientPort = 0;
     public List<InetAddress> trustedDevices = new ArrayList<>();
     private File logFile;
-    private Boolean doSay = false;
-    private Boolean waitForRebootTime = false;
+
+    public Serial getSerial() {
+        return serial;
+    }
 
     public Serial serial;
 
@@ -67,6 +69,7 @@ public class Main {
                 .device("/dev/ttyS0")
                 .build());
         serial.open();
+        main.serial = serial;
         Logger.info("Serial created");
         Logger.info("Waiting for opening of Serial");
         while (!serial.isOpen()) {
@@ -132,36 +135,66 @@ public class Main {
     }
   
     private void Controller(InetAddress ip){
-        if (waitForRebootTime) {
-            try {
-                rebootBySeconds(Integer.parseInt(command));
-            } catch (Exception e) {
-                return;
-            }
-        }
-
-        if (doSay) {
-            say();
-            return;
-        }
-
         switch (command) {
+            case "MFF" -> moveFF();
+            case "MFR" -> moveFR();
+            case "MFL" -> moveFL();
+            case "MBB" -> moveBB();
+            case "MBR" -> moveBR();
+            case "MBL" -> moveBL();
+            case "MRR" -> moveRR();
+            case "MLL" -> moveLL();
+            case "MTR" -> moveTR();
+            case "MSS" -> moveSS();
             case "TRUST" -> connectionTrust(ip);
             case "CONNECT" -> startConnection(ip);
             case "CONNECTED" -> connectionTest(ip);
             case "IDLE" -> idle();
-            case "FORWARD" -> forward();
-            case "LEFT" -> left();
-            case "RIGHT" -> right();
-            case "BACKWARDS" -> backwards();
             case "SAY" -> say();
             case "REBOOT_NOW" -> rebootNow();
-            case "REBOOT_S" -> {
-                waitForRebootTime = true;
-                Logger.info("Waiting for Countdown to start reboot");
-            }
+            case "REBOOT_S" -> rebootBySeconds(command);
             default -> Logger.warning("Command: " + command + " IS NOT VALID!");
         }
+    }
+
+    private void moveFF() {
+        send("D[ff]");
+    }
+
+    private void moveFR() {
+        send("D[fr]");
+    }
+
+    private void moveFL() {
+        send("D[fl]");
+    }
+
+    private void moveBB() {
+        send("D[bb]");
+    }
+
+    private void moveBR() {
+        serial.write("BR");
+    }
+
+    private void moveBL() {
+        serial.write("BL");
+    }
+
+    private void moveRR() {
+        serial.write("D[rr]");
+    }
+
+    private void moveLL() {
+        serial.write("LL");
+    }
+
+    private void moveTR() {
+        serial.write("TR");
+    }
+
+    private void moveSS() {
+        send("D[ss]");
     }
 
     private void connectionTrust(InetAddress ip) {
@@ -273,13 +306,7 @@ public class Main {
         Logger.info("I'm now going Backwards.");
     }
     private void say() {
-        if (doSay) {
-            Logger.info("Saying: " + command);
-            doSay = false;
-        } else {
-            Logger.info("Waiting for argument");
-            doSay = true;
-        }
+
     }
 
     private void rebootNow() {
@@ -299,9 +326,10 @@ public class Main {
         }
     }
 
-    private void rebootBySeconds(int seconds) {
+    private void rebootBySeconds(String command) {
         try  {
             Runtime r = Runtime.getRuntime();
+            int seconds = 1;
             Process p = r.exec("reboot " + seconds);
             int exitCode = p.waitFor();
 
@@ -315,5 +343,10 @@ public class Main {
             e.printStackTrace();
             Logger.error("Failed to Reboot!");
         }
+    }
+
+
+    public void send(String send) {
+        serial.write(send);
     }
 }

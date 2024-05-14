@@ -8,6 +8,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class SerialHandler {
+    public void send(String send) throws Exception {
+        Serial serial = new Main().getSerial();
+        serial.open();
+        serial.write(send);
+        serial.close();
+    }
+
     public void receive(Serial serial) throws Exception {
         Thread thread = new Thread(new Runnable() {
             @Override
