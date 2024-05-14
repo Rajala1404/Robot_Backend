@@ -1,0 +1,29 @@
+S = first Char to start instruction receiving
+
+D[xx] = Drive <2 Chars Value>
+
+xx can be:
+ff = Front Front
+fr = Front Right
+rr = Right Right
+br = Back Right
+bb = Back Back
+bl = Back Left
+ll = Left Left
+fl = Front Lef
+tr = Turn Right
+tl = Turn Left
+ss = Stop Stop
+
+T[i;xxxxxxxxxxxxxxxx] = Display Text on LCD
+xxxxxxxxxxxxxxxx = The Message you want to print (Needs to be exactly 16 ASCII Characters, valid Characters are: 0x30-0x7f or 0x01-0x08 (Custom Values)
+i = This is the Line on what you want to print (1-2)
+
+Receive:
+B[iiii] = Button with 4 Digit Integer
+
+Buttons Left from Right
+Button 1 =
+Button 2 =
+Button 3 =
+Button 4 =
