@@ -174,23 +174,23 @@ public class Main {
     }
 
     private void moveBR() {
-        serial.write("BR");
+        send("D[br]");
     }
 
     private void moveBL() {
-        serial.write("BL");
+        send("D[bl]");
     }
 
     private void moveRR() {
-        serial.write("D[rr]");
+        send("D[rr]");
     }
 
     private void moveLL() {
-        serial.write("LL");
+        send("D[ll]");
     }
 
     private void moveTR() {
-        serial.write("TR");
+        send("D[tr]");
     }
 
     private void moveSS() {
