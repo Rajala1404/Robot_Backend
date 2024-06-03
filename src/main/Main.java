@@ -7,6 +7,7 @@ import java.util.*;
 
 import com.pi4j.Pi4J;
 import com.pi4j.io.serial.*;
+import utils.DisplayAnimations;
 import utils.Logger;
 import utils.SerialHandler;
 
@@ -21,11 +22,13 @@ public class Main {
     public static int PORT_SEND_TRUST = 6001;
     public static int PORT_SEND_TEST = 6002;
     public static int MAX_BYTES = 4096;
-    public String command = "IDLE";
+    public String command = "MSS";
     public InetAddress lastClientIP = InetAddress.getByName("0.0.0.0");
-    public Integer lastClientPort = 0;
+    public int lastClientPort = 0;
     public List<InetAddress> trustedDevices = new ArrayList<>();
     private File logFile;
+
+    public boolean booting = true;
 
     public Serial getSerial() {
         return serial;
@@ -33,18 +36,7 @@ public class Main {
 
     public Serial serial;
 
-    public File getLogFile() {
-        return logFile;
-    }
-
-    public void setLogFile(File logFile) {
-        this.logFile = logFile;
-    }
-
-
-    public Main() throws Exception {
-
-    }
+    public Main() throws Exception {}
 
     public static void main(String[] args) throws Exception {
         boot();
@@ -52,9 +44,11 @@ public class Main {
 
     private static void boot() throws Exception {
         Main main = new Main();
+        DisplayAnimations display = new DisplayAnimations();
         var serial = main.serial;
         SerialHandler serialHandler = new SerialHandler();
         new Logger().createLogFile();
+        Logger.info("Backend Version: 0.1.0");
         var pi4j = Pi4J.newAutoContext();
         Logger.info("Trying to create Serial...");
         serial = pi4j.create(Serial.newConfigBuilder(pi4j)
@@ -81,6 +75,31 @@ public class Main {
         Logger.info("Successfully started Serial reader.");
         Logger.info("Trying Handshake with Controller...");
         serial.write("S");
+        display.BootAnimation(main);
+        main.displayText(2, "..............");
+        Thread.sleep(200);
+        main.displayText(2, "#.............");
+        Thread.sleep(200);
+        main.displayText(2, "##............");
+        Thread.sleep(200);
+        main.displayText(2, "###...........");
+        Thread.sleep(200);
+        main.displayText(2, "####..........");
+        Thread.sleep(200);
+        main.displayText(2, "######........");
+        Thread.sleep(200);
+        main.displayText(2, "########......");
+        Thread.sleep(200);
+        main.displayText(2, "#########.....");
+        Thread.sleep(200);
+        main.displayText(2, "##########....");
+        Thread.sleep(200);
+        main.displayText(2, "###########...");
+        Thread.sleep(200);
+        main.displayText(2, "############..");
+        Thread.sleep(200);
+        main.displayText(2, "#############.");
+        Thread.sleep(500);
         Logger.info("Trying to start server...");
         for (int i = 0; i < 9; i++) {
             try {
@@ -98,8 +117,13 @@ public class Main {
                 }
             }
         }
+        main.displayText(2, "##############");
+        main.booting = false;
+        main.displayText(1, "DONE!");
+        Thread.sleep(200);
+        main.displayText(1,"    Ready!    ");
+        main.displayText(2,"Version  0.1.0");
     }
-
 
     private void server() {
         Thread thread = new Thread(new Runnable() {
@@ -125,7 +149,8 @@ public class Main {
                     lastClientPort = packet.getPort();
                     String clientMessage = new String(packet.getData(),0,packet.getLength());
                     command = clientMessage;
-                    Logger.info("[IP: " + lastClientIP + " | Port: " + lastClientPort +"] " + clientMessage);
+                    if (!clientMessage.equals("CONNECTED")) Logger.info("[IP: " + lastClientIP + " | Port: " + lastClientPort +"] " + clientMessage);
+
                     Controller(lastClientIP);
                 }
                 if (socket.isBound()) socket.close();
@@ -133,12 +158,13 @@ public class Main {
         });
         if(!thread.isAlive()) thread.start();
     }
-  
+
     private void Controller(InetAddress ip){
-        if (command.equals("TRUST")) connectionTrust(ip);
+        final String finalCommand = command;
+        if (finalCommand.equals("TRUST")) connectionTrust(ip);
 
         if (trustedDevices.contains(ip)) {
-            switch (command) {
+            switch (finalCommand) {
                 case "MFF" -> moveFF();
                 case "MFR" -> moveFR();
                 case "MFL" -> moveFL();
@@ -152,11 +178,12 @@ public class Main {
                 case "MSS" -> moveSS();
                 case "CONNECT" -> startConnection(ip);
                 case "CONNECTED" -> connectionTest(ip);
-                case "IDLE" -> idle();
-                case "SAY" -> say();
                 case "REBOOT_NOW" -> rebootNow();
-                case "REBOOT_S" -> rebootBySeconds(command);
-                default -> Logger.warning("Command: " + command + " IS NOT VALID!");
+                case "REBOOT_S" -> rebootBySeconds(finalCommand);
+                default -> {
+                    if (finalCommand.startsWith("SAY")) say(finalCommand);
+                    else Logger.warning("Command: " + finalCommand + " IS NOT VALID!");
+                }
             }
         }
     }
@@ -205,6 +232,48 @@ public class Main {
         send("D[ss]");
     }
 
+    private void say(String command) {
+        displayText(1, "Saying:");
+        displayText(2, command.substring(3));
+    }
+
+    private void rebootNow() {
+        try  {
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec("reboot now");
+            int exitCode = p.waitFor();
+            if (exitCode == 0) {
+                Logger.info("Now Rebooting");
+            } else {
+                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
+            }
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+            Logger.error(Arrays.toString(e.getStackTrace()));
+            Logger.error("Failed to Reboot!");
+        }
+    }
+
+    private void rebootBySeconds(String command) {
+        try  {
+            Runtime r = Runtime.getRuntime();
+            int seconds = 1;
+            Process p = r.exec("reboot " + seconds);
+            int exitCode = p.waitFor();
+
+            if (exitCode == 0) {
+                Logger.info("Now Rebooting...");
+                serial.write("R");
+            } else {
+                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
+            }
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+            Logger.error(Arrays.toString(e.getStackTrace()));
+            Logger.error("Failed to Reboot!");
+        }
+    }
+
     private void connectionTrust(InetAddress ip) {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -234,7 +303,8 @@ public class Main {
                     clientSocket = new DatagramSocket();
                     clientSocket.setSoTimeout(1000);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.error(e.getMessage());
+                    Logger.error(Arrays.toString(e.getStackTrace()));
                     return;
                 }
                 try {
@@ -250,7 +320,8 @@ public class Main {
                     Logger.debug("Sent Ack!");
                     clientSocket.send(sendPacket);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.error(e.getMessage());
+                    Logger.error(Arrays.toString(e.getStackTrace()));
                 } finally {
                     if (clientSocket.isBound()) clientSocket.close();
                 }
@@ -275,7 +346,8 @@ public class Main {
                         clientSocket = new DatagramSocket();
                         clientSocket.setSoTimeout(1000);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Logger.error(e.getMessage());
+                        Logger.error(Arrays.toString(e.getStackTrace()));
                         return;
                     }
                     try {
@@ -284,7 +356,8 @@ public class Main {
                         sendPacket = new DatagramPacket(sendData, sendData.length, ip, PORT_SEND_TEST);
                         clientSocket.send(sendPacket);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Logger.error(e.getMessage());
+                        Logger.error(Arrays.toString(e.getStackTrace()));
                     } finally {
                         if (clientSocket.isBound()) clientSocket.close();
                     }
@@ -294,65 +367,22 @@ public class Main {
         if (!(thread.isAlive())) thread.start();
     }
 
-    private void idle() {
-        Logger.info("I'm now Idle.");
-    }
+    public void displayText(int line, String text) {
+        int maxLength = 14;
+        int maxCLength = 16;
+        StringBuilder truncatedText = new StringBuilder();
+        truncatedText.append(line).append(";").append(text, 0, Math.min(text.length(), maxLength));
 
-    private void forward() {
-        Logger.info("I'm now going Forward.");
-    }
-
-    private void left() {
-        Logger.info("I'm now turning Left.");
-    }
-
-    private void right() {
-        Logger.info("I'm now turning Right.");
-    }
-
-    private void backwards() {
-        Logger.info("I'm now going Backwards.");
-    }
-    private void say() {
-
-    }
-
-    private void rebootNow() {
-        try  {
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec("reboot now");
-            int exitCode = p.waitFor();
-
-            if (exitCode == 0) {
-                Logger.info("Now Rebooting");
-            } else {
-                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.error("Failed to Reboot!");
+        if (truncatedText.length() < maxLength) {
+            truncatedText.append(" ".repeat(maxCLength - truncatedText.length()));
         }
+
+        text = truncatedText.toString();
+
+        Logger.debug("Displaying: " + text);
+
+        serial.write(text);
     }
-
-    private void rebootBySeconds(String command) {
-        try  {
-            Runtime r = Runtime.getRuntime();
-            int seconds = 1;
-            Process p = r.exec("reboot " + seconds);
-            int exitCode = p.waitFor();
-
-            if (exitCode == 0) {
-                Logger.info("Now Rebooting...");
-                serial.write("R");
-            } else {
-                Logger.error("Failed to Reboot! Exit Code: " + exitCode);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.error("Failed to Reboot!");
-        }
-    }
-
 
     public void send(String send) {
         serial.write(send);
