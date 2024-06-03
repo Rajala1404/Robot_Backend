@@ -135,25 +135,29 @@ public class Main {
     }
   
     private void Controller(InetAddress ip){
-        switch (command) {
-            case "MFF" -> moveFF();
-            case "MFR" -> moveFR();
-            case "MFL" -> moveFL();
-            case "MBB" -> moveBB();
-            case "MBR" -> moveBR();
-            case "MBL" -> moveBL();
-            case "MRR" -> moveRR();
-            case "MLL" -> moveLL();
-            case "MTR" -> moveTR();
-            case "MSS" -> moveSS();
-            case "TRUST" -> connectionTrust(ip);
-            case "CONNECT" -> startConnection(ip);
-            case "CONNECTED" -> connectionTest(ip);
-            case "IDLE" -> idle();
-            case "SAY" -> say();
-            case "REBOOT_NOW" -> rebootNow();
-            case "REBOOT_S" -> rebootBySeconds(command);
-            default -> Logger.warning("Command: " + command + " IS NOT VALID!");
+        if (command.equals("TRUST")) connectionTrust(ip);
+
+        if (trustedDevices.contains(ip)) {
+            switch (command) {
+                case "MFF" -> moveFF();
+                case "MFR" -> moveFR();
+                case "MFL" -> moveFL();
+                case "MBB" -> moveBB();
+                case "MBR" -> moveBR();
+                case "MBL" -> moveBL();
+                case "MRR" -> moveRR();
+                case "MLL" -> moveLL();
+                case "MTR" -> moveTR();
+                case "MTL" -> moveTL();
+                case "MSS" -> moveSS();
+                case "CONNECT" -> startConnection(ip);
+                case "CONNECTED" -> connectionTest(ip);
+                case "IDLE" -> idle();
+                case "SAY" -> say();
+                case "REBOOT_NOW" -> rebootNow();
+                case "REBOOT_S" -> rebootBySeconds(command);
+                default -> Logger.warning("Command: " + command + " IS NOT VALID!");
+            }
         }
     }
 
@@ -190,6 +194,10 @@ public class Main {
     }
 
     private void moveTR() {
+        send("D[tr]");
+    }
+
+    private void moveTL() {
         send("D[tr]");
     }
 
