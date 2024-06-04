@@ -48,7 +48,7 @@ public class Main {
         var serial = main.serial;
         SerialHandler serialHandler = new SerialHandler();
         new Logger().createLogFile();
-        Logger.info("Backend Version: 0.1.0");
+        Logger.info("Backend Version: 0.1.1");
         var pi4j = Pi4J.newAutoContext();
         Logger.info("Trying to create Serial...");
         serial = pi4j.create(Serial.newConfigBuilder(pi4j)
@@ -76,29 +76,33 @@ public class Main {
         Logger.info("Trying Handshake with Controller...");
         serial.write("S");
         display.BootAnimation(main);
-        main.displayText(2, "..............");
+        main.displayText(2, "................");
         Thread.sleep(200);
-        main.displayText(2, "#.............");
+        main.displayText(2, "#...............");
         Thread.sleep(200);
-        main.displayText(2, "##............");
+        main.displayText(2, "##..............");
         Thread.sleep(200);
-        main.displayText(2, "###...........");
+        main.displayText(2, "###.............");
         Thread.sleep(200);
-        main.displayText(2, "####..........");
+        main.displayText(2, "####............");
         Thread.sleep(200);
-        main.displayText(2, "######........");
+        main.displayText(2, "######..........");
         Thread.sleep(200);
-        main.displayText(2, "########......");
+        main.displayText(2, "########........");
         Thread.sleep(200);
-        main.displayText(2, "#########.....");
+        main.displayText(2, "#########.......");
         Thread.sleep(200);
-        main.displayText(2, "##########....");
+        main.displayText(2, "##########......");
         Thread.sleep(200);
-        main.displayText(2, "###########...");
+        main.displayText(2, "###########.....");
         Thread.sleep(200);
-        main.displayText(2, "############..");
+        main.displayText(2, "############....");
         Thread.sleep(200);
-        main.displayText(2, "#############.");
+        main.displayText(2, "#############...");
+        Thread.sleep(200);
+        main.displayText(2, "##############..");
+        Thread.sleep(200);
+        main.displayText(2, "###############.");
         Thread.sleep(500);
         Logger.info("Trying to start server...");
         for (int i = 0; i < 9; i++) {
@@ -117,12 +121,12 @@ public class Main {
                 }
             }
         }
-        main.displayText(2, "##############");
+        main.displayText(2, "################");
         main.booting = false;
         main.displayText(1, "DONE!");
         Thread.sleep(200);
-        main.displayText(1,"    Ready!    ");
-        main.displayText(2,"Version  0.1.0");
+        main.displayText(1,"     Ready!     ");
+        main.displayText(2,"Version    0.1.1");
     }
 
     private void server() {
@@ -368,14 +372,12 @@ public class Main {
     }
 
     public void displayText(int line, String text) {
-        int maxLength = 14;
-        int maxCLength = 16;
+        int maxLength = 16;
+        int maxCLength = 20;
         StringBuilder truncatedText = new StringBuilder();
-        truncatedText.append(line).append(";").append(text, 0, Math.min(text.length(), maxLength));
-
-        if (truncatedText.length() < maxLength) {
-            truncatedText.append(" ".repeat(maxCLength - truncatedText.length()));
-        }
+        truncatedText.append("T[").append(line).append(";").append(text, 0, Math.min(text.length(), maxLength));
+        truncatedText.append(" ".repeat(maxCLength - truncatedText.length()));
+        truncatedText.append("]");
 
         text = truncatedText.toString();
 
