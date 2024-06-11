@@ -243,6 +243,8 @@ public class Main {
 
     private void rebootNow() {
         try  {
+            send("R");
+            Thread.sleep(100);
             Runtime r = Runtime.getRuntime();
             Process p = r.exec("reboot now");
             int exitCode = p.waitFor();
