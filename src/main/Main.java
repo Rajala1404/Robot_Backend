@@ -229,7 +229,7 @@ public class Main {
     }
 
     private void moveTL() {
-        send("D[tr]");
+        send("D[tl]");
     }
 
     private void moveSS() {
