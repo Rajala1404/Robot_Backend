@@ -1,2 +1,2 @@
-# Unibot Backend
-This is the Backend (High-Level) for the Unibot Project.
+# unibot Backend
+This is the Backend (High-Level) for the unibot Project.
